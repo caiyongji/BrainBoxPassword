@@ -96,7 +96,7 @@ public class Calculator {
 		if (countTime % 10000 == 0) {
 			time = new DateTime();
 			int cost = Minutes.minutesBetween(start, time).getMinutes();
-			System.out.println("have tried to match " + countTime + " times, and "+cost+" minutes passed.");
+			System.out.println("have tried to match " + countTime + " times, time now "+ time +" and "+cost+" minutes passed.");
 		}
 		int shapeRowSize = shape.rowKeySet().size();
 		int shapeColumnSize = shape.columnKeySet().size();
