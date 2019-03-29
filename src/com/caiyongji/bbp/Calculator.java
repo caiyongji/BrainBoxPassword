@@ -31,6 +31,7 @@ public class Calculator {
 	private Long countTime = 0l;
 	private DateTime start;
 	private DateTime time;
+	private Integer solutionCount = 0;
 
 	public static void main(String[] args) {
 		Calculator c = new Calculator();
@@ -71,6 +72,7 @@ public class Calculator {
 				continue;
 			}else {
 				Tools.shape(backTable);
+				System.out.println("-------------------- the number of solutions have found: "+ solutionCount);
 			}
 		}
 	}
