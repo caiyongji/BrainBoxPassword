@@ -13,6 +13,15 @@ public class Tools {
 		}
 		System.out.print("**/");
 	}
+	
+	public static void shape(Table<Integer, Integer, String> table) {
+		if (table == null) {
+			return;
+		}
+		for (Integer row : table.rowKeySet()) {
+			System.out.println(table.row(row).values());
+		}
+	}
 
 	public static void printShape(Block block) {
 		System.out.println("\nUP:");

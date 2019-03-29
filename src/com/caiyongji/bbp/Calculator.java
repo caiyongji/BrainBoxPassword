@@ -2,7 +2,9 @@ package com.caiyongji.bbp;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.concurrent.ConcurrentLinkedDeque;
+
+import org.joda.time.DateTime;
+import org.joda.time.Minutes;
 
 import com.caiyongji.bbp.blocks.A_Brown;
 import com.caiyongji.bbp.blocks.B_DarkBlue;
@@ -18,14 +20,24 @@ import com.caiyongji.bbp.blocks.K_Red;
 import com.caiyongji.bbp.blocks.L_Yellow;
 import com.caiyongji.bbp.utils.Backplane;
 import com.caiyongji.bbp.utils.Block;
+import com.caiyongji.bbp.utils.Direction;
+import com.caiyongji.bbp.utils.Tools;
 import com.google.common.collect.Collections2;
+import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Table;
 
 public class Calculator {
+	private Long countTime = 0l;
+	private DateTime start;
+	private DateTime time;
 
 	public static void main(String[] args) {
-		ConcurrentLinkedDeque<Block> queue = new ConcurrentLinkedDeque<>();
+		Calculator c = new Calculator();
+		c.calculate();
+	}
+
+	public void calculate() {
 		/**
 		 * 12 kinds of colors
 		 */
@@ -36,18 +48,106 @@ public class Calculator {
 		 * 479,001,600 permutations
 		 */
 		Collection<List<Block>> fullPermutations = Collections2.permutations(blockList);
-		
+		System.out.println("fullPermutations size: " + fullPermutations.size());
+
 		/**
-		 * every block try up to 225*8 times in backplane
+		 * count time
 		 */
-		Backplane backplane = new Backplane();
-		Table<Integer, Integer, String> backTable = backplane.create();
-		
+		start = new DateTime();
+		System.out.println("start time: "+start.toString());
 		for (List<Block> list : fullPermutations) {
+			/**
+			 * every block try up to 225*8 times in backplane
+			 */
+			Backplane backplane = new Backplane();
+			Table<Integer, Integer, String> backTable = backplane.create();
+			Boolean mismatchBlock = false;
 			for (Block block : list) {
-				System.out.print(block.identification() + ",");
+				if (!match(backTable, block)) {
+					mismatchBlock = true;
+				}
 			}
-			System.out.println();
+			if (mismatchBlock) {
+				continue;
+			}else {
+				Tools.shape(backTable);
+			}
 		}
+	}
+
+	private Boolean match(Table<Integer, Integer, String> backplane, Block block) {
+		String identification = block.identification();
+		List<Table<Integer, Integer, String>> list = Lists.newArrayList(block.up(), block.right(), block.down(),
+				block.left(), block.transpose(Direction.UP), block.transpose(Direction.RIGHT),
+				block.transpose(Direction.DOWN), block.transpose(Direction.LEFT));
+		for (Table<Integer, Integer, String> shape : list) {
+			if (place(backplane, shape, identification)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private Boolean place(Table<Integer, Integer, String> backplane, Table<Integer, Integer, String> shape,
+			String identification) {
+		// Tools.shape(backplane);
+		// Tools.printShape(shape);
+		countTime++;
+		if (countTime % 10000 == 0) {
+			time = new DateTime();
+			int cost = Minutes.minutesBetween(start, time).getMinutes();
+			System.out.println("have tried to match " + countTime + " times, and "+cost+" minutes passed.");
+		}
+		int shapeRowSize = shape.rowKeySet().size();
+		int shapeColumnSize = shape.columnKeySet().size();
+		for (int i = 0; i < backplane.rowKeySet().size() - shapeRowSize + 1; i++) {
+			for (int j = 0; j < backplane.columnKeySet().size() - shapeColumnSize + 1; j++) {
+				Table<Integer, Integer, String> subBackplane = table4x4(backplane, i, j);
+				// System.out.println("------------------------------------------------------------");
+				// Tools.shape(subBackplane);
+				if (matchSubBackplane(subBackplane, shape)) {
+					markBackplane(backplane, shape, i, j, identification);
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	private Boolean matchSubBackplane(Table<Integer, Integer, String> subBackplane,
+			Table<Integer, Integer, String> shape) {
+		int shapeRowSize = shape.rowKeySet().size();
+		int shapeColumnSize = shape.columnKeySet().size();
+
+		for (int k = 0; k < shapeRowSize; k++) {
+			for (int l = 0; l < shapeColumnSize; l++) {
+
+				if ("1".equals(shape.get(k, l)) && !shape.get(k, l).equals(subBackplane.get(k, l))) {
+					return false;
+				}
+			}
+		}
+		return true;
+	}
+
+	private void markBackplane(Table<Integer, Integer, String> backplane, Table<Integer, Integer, String> shape,
+			Integer row, Integer column, String identification) {
+		for (int i = 0; i < shape.rowKeySet().size(); i++) {
+			for (int j = 0; j < shape.columnKeySet().size(); j++) {
+				if ("1".equals(shape.get(i, j))) {
+					backplane.put(row + i, column + j, identification);
+				}
+			}
+		}
+	}
+
+	private Table<Integer, Integer, String> table4x4(Table<Integer, Integer, String> backplane, int row, int column) {
+		Table<Integer, Integer, String> table = HashBasedTable.create();
+		for (int i = 0; i < 4; i++) {
+			for (int j = 0; j < 4; j++) {
+				table.put(i, j, backplane.get(row + i, column + j));
+			}
+		}
+		return table;
 	}
 }
