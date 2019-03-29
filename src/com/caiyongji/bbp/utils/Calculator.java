@@ -1,4 +1,4 @@
-package com.caiyongji.bbp;
+package com.caiyongji.bbp.utils;
 
 import java.util.Collection;
 import java.util.List;
@@ -18,27 +18,29 @@ import com.caiyongji.bbp.blocks.I_Pink;
 import com.caiyongji.bbp.blocks.J_Purple;
 import com.caiyongji.bbp.blocks.K_Red;
 import com.caiyongji.bbp.blocks.L_Yellow;
-import com.caiyongji.bbp.utils.Backplane;
-import com.caiyongji.bbp.utils.Block;
-import com.caiyongji.bbp.utils.Direction;
-import com.caiyongji.bbp.utils.Tools;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Table;
 
-public class Calculator {
+public class Calculator extends Thread{
 	private Long countTime = 0l;
 	private DateTime start;
 	private DateTime time;
 	private Integer solutionCount = 0;
-
-	public static void main(String[] args) {
-		Calculator c = new Calculator();
-		c.calculate();
+	private List<List<Block>> blocklists;
+	public Calculator(List<List<Block>> blocklists) {
+		this.blocklists = blocklists;
 	}
-
+	public Calculator() {
+	}
+	@Override
+	public void run() {
+		calculate(blocklists);
+	}
+	
 	public void calculate() {
+		
 		/**
 		 * 12 kinds of colors
 		 */
@@ -50,7 +52,6 @@ public class Calculator {
 		 */
 		Collection<List<Block>> fullPermutations = Collections2.permutations(blockList);
 		System.out.println("fullPermutations size: " + fullPermutations.size());
-
 		/**
 		 * count time
 		 */
@@ -62,15 +63,33 @@ public class Calculator {
 			 */
 			Backplane backplane = new Backplane();
 			Table<Integer, Integer, String> backTable = backplane.create();
-			Boolean mismatchBlock = false;
 			for (Block block : list) {
-				if (!match(backTable, block)) {
-					mismatchBlock = true;
-				}
+				match(backTable, block);
 			}
-			if (mismatchBlock) {
-				continue;
-			}else {
+			if (!backTable.containsValue("1")) {
+				Tools.shape(backTable);
+				System.out.println("-------------------- the number of solutions have found: "+ solutionCount);
+			}
+		}
+	}
+
+	public void calculate(List<List<Block>> blocklists) {
+
+		/**
+		 * count time
+		 */
+		start = new DateTime();
+		System.out.println("start time: "+start.toString());
+		for (List<Block> list : blocklists) {
+			/**
+			 * every block try up to 225*8 times in backplane
+			 */
+			Backplane backplane = new Backplane();
+			Table<Integer, Integer, String> backTable = backplane.create();
+			for (Block block : list) {
+				match(backTable, block);
+			}
+			if (!backTable.containsValue("1")) {
 				Tools.shape(backTable);
 				System.out.println("-------------------- the number of solutions have found: "+ solutionCount);
 			}
@@ -95,7 +114,7 @@ public class Calculator {
 		// Tools.shape(backplane);
 		// Tools.printShape(shape);
 		countTime++;
-		if (countTime % 10000 == 0) {
+		if (countTime % 100000 == 0) {
 			time = new DateTime();
 			int cost = Minutes.minutesBetween(start, time).getMinutes();
 			System.out.println("have tried to match " + countTime + " times, time now "+ time +" and "+cost+" minutes passed.");
