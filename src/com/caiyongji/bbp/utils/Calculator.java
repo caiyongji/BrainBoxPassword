@@ -72,11 +72,12 @@ public class Calculator extends Thread {
 			}
 			Backplane backplane = new Backplane();
 			Table<Integer, Integer, String> baseBackplane = backplane.create();
+			Table<Integer, Integer, String> sacledTable = scaleBackplane(baseBackplane);
 			for (Block block : list) {
-				Table<Integer, Integer, String> sacledTable = scaleBackplane(baseBackplane);
+				sacledTable = scaleBackplane(sacledTable);
 				Tools.shape(sacledTable);
 				match(baseBackplane, sacledTable, block);
-				Tools.shape(baseBackplane);
+//				Tools.shape(baseBackplane);
 			}
 			if (!baseBackplane.containsValue("1")) {
 				System.out.println("-------------------- the number of solutions have found: " + solutionCount);
@@ -152,7 +153,12 @@ public class Calculator extends Thread {
 		String identification = block.identification();
 		List<Table<Integer, Integer, String>> list = block.distinctShapes();
 		for (Table<Integer, Integer, String> shape : list) {
-			if (containsAndReplace(backplane, shape, identification)) {
+			System.out.println("try shape: ");
+			Tools.shape(shape);
+//			if (containsAndReplace(backplane, shape, identification)) {
+			//TODO replace back
+			if (containsAndReplace(scaledBackplane, shape, identification)) {
+//				Tools.shape(scaledBackplane);
 				return true;
 			}
 		}
